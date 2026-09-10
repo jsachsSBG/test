@@ -103,3 +103,28 @@ All config via environment variables — see `.env.example` for the full list.
 Key settings:
 - `HIGH_INTENT_SCORE_THRESHOLD` — score at which to fire alerts (default: 50)
 - `NOTIFY_COOLDOWN_MINUTES` — don't re-alert for same visitor within this window (default: 60)
+
+## Salesforce CLI (for SF data analysis)
+
+Claude Code on the web sessions install the [Salesforce CLI](https://developer.salesforce.com/tools/salesforcecli) (`sf`, with the legacy `sfdx` alias) automatically via `.claude/hooks/session-start.sh`.
+
+### Connect an org (headless, no browser)
+
+1. On a machine where you're already logged in, print the org's auth URL:
+   ```bash
+   sf org display --target-org <alias> --verbose --json   # copy the "sfdxAuthUrl" value
+   ```
+2. In the Claude Code environment settings, add a secret environment variable named `SFDX_AUTH_URL` with that value (optionally `SF_ORG_ALIAS` to name the org; defaults to `sfdata`).
+3. New sessions will authenticate on startup and set that org as the default.
+
+The auth URL grants full API access to the org — keep it as a secret, never commit it.
+
+### Run analysis
+
+```bash
+sf org display                                              # confirm connection
+sf data query -q "SELECT Id, Name FROM Account LIMIT 10"    # quick SOQL
+sf data query -q "SELECT ... FROM Opportunity" -r csv --output-file opps.csv
+sf data export bulk -q "SELECT ... FROM Lead" --output-file leads.csv --wait 10   # large datasets (Bulk API 2.0)
+sf sobject describe -s Opportunity                           # inspect fields
+```
