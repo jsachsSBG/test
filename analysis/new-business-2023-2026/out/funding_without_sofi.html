@@ -1,0 +1,192 @@
+<title>Funding Without SoFi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{--paper:#f5f6f3;--card:#ffffff;--ink:#17213a;--ink2:#4d5670;--rule:#d9dde3;--soft:#eceff2;--gain:#1f7a4d;--gainbg:#e3f2e9;--loss:#b4472b;--lossbg:#f9e7e1;--hold:#8a5a00;--holdbg:#fbf0d6;--accent:#1f4f8a;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#121722;--card:#1a2130;--ink:#e7eaf0;--ink2:#aab2c3;--rule:#2d3648;--soft:#222b3c;--gain:#5ccb90;--gainbg:#173526;--loss:#f2917a;--lossbg:#40231c;--hold:#f0c264;--holdbg:#3a2d10;--accent:#7fb0ec;}}
+:root[data-theme="dark"]{--paper:#121722;--card:#1a2130;--ink:#e7eaf0;--ink2:#aab2c3;--rule:#2d3648;--soft:#222b3c;--gain:#5ccb90;--gainbg:#173526;--loss:#f2917a;--lossbg:#40231c;--hold:#f0c264;--holdbg:#3a2d10;--accent:#7fb0ec;}
+body{background:var(--paper);color:var(--ink);font-family:"Public Sans",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;padding-inline:20px;padding-block:28px 64px;font-variant-numeric:tabular-nums}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-family:"Newsreader",Georgia,"Times New Roman",serif;font-weight:600;font-size:2.4rem;line-height:1.08;margin:0 0 8px;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:1.5rem;margin:0 0 4px;line-height:1.2;text-wrap:balance}
+h3{font-size:1rem;font-weight:700;margin:0 0 6px}
+.eyebrow{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:600;margin-bottom:6px}
+.lede{font-size:1.08rem;color:var(--ink);max-width:66ch;margin:0 0 6px}
+.meta{color:var(--ink2);font-size:.9rem;max-width:70ch;margin:0 0 26px}
+section{margin:0 0 34px}
+.premise{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0 8px}
+.premise .tile{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.tile .n{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:1.5rem;font-weight:500;line-height:1.1}
+.tile .l{font-size:.84rem;color:var(--ink2);margin-top:4px}
+.tile.loss .n{color:var(--loss)}.tile.gain .n{color:var(--gain)}
+.tw{overflow-x:auto;margin:10px 0 4px}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--rule);text-align:right;vertical-align:top}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);font-weight:600}
+td.num{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:.88rem;white-space:nowrap}
+.note{font-size:.86rem;color:var(--ink2);margin:6px 0 0;max-width:72ch}
+.ledger{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.lever{background:var(--card);border:1px solid var(--rule);border-radius:8px;display:grid;grid-template-columns:1fr 185px;gap:0}
+.lever .body{padding:16px 18px}
+.lever .val{border-left:1px solid var(--rule);padding:16px 14px;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;text-align:right;background:var(--gainbg)}
+.lever .val .n{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:1.2rem;white-space:nowrap;color:var(--gain);font-weight:500;line-height:1.1}
+.lever .val .l{font-size:.76rem;color:var(--ink2);margin-top:4px}
+.lever.hold .val{background:var(--holdbg)}.lever.hold .val .n{color:var(--hold)}
+.lever p{margin:6px 0 0;font-size:.95rem;max-width:70ch}
+.lever ul{margin:8px 0 0;padding-left:18px;font-size:.93rem}
+.lever li{margin:4px 0}
+.ev{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:var(--ink2);margin-top:8px}
+.ev span b{color:var(--ink);font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-weight:500;font-size:.8rem}
+.chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.74rem;font-weight:700;letter-spacing:.02em;white-space:nowrap;vertical-align:middle;margin-left:6px}
+.chip.gain{background:var(--gainbg);color:var(--gain)}.chip.hold{background:var(--holdbg);color:var(--hold)}.chip.loss{background:var(--lossbg);color:var(--loss)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px}
+.step{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.step .when{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:.8rem;color:var(--accent);font-weight:500;margin-bottom:6px}
+.step ul{margin:0;padding-left:18px;font-size:.92rem}.step li{margin:4px 0}
+.callout{background:var(--soft);border-radius:8px;padding:14px 18px;margin:12px 0;font-size:.95rem;max-width:80ch}
+.callout b{font-weight:700}
+@media (max-width:560px){.lever{grid-template-columns:1fr}.lever .val{border-left:none;border-top:1px solid var(--rule);align-items:flex-start;text-align:left}h1{font-size:1.9rem}}
+</style>
+<div class="wrap">
+<div class="eyebrow">Operating plan &middot; New business &middot; September 2026</div>
+<h1>Funding Without SoFi</h1>
+<p class="lede">SoFi is already half gone and there is no replacement vendor to buy. The fundings have to come from inside the funnel: the approvals already won, the leads already paid for, and the reps already hired.</p>
+<p class="meta">Every figure is a monthly number from Salesforce for January&ndash;August 2026 unless it says otherwise. &ldquo;Non-SoFi&rdquo; means every new-business lead source except SoFi. Estimates are ranges, not promises; the first 60 days will show which levers are real.</p>
+
+<section>
+<div class="eyebrow">The gap</div>
+<h2>What SoFi was carrying, and what July&ndash;August looked like without half of it</h2>
+<div class="premise">
+<div class="tile loss"><div class="n">309 &rarr; 156</div><div class="l">SoFi fundings per month, Jan&ndash;Jun vs Jul&ndash;Aug</div></div>
+<div class="tile loss"><div class="n">$1.8M &rarr; $0.85M</div><div class="l">SoFi SBG revenue per month</div></div>
+<div class="tile"><div class="n">500 &rarr; 646</div><div class="l">Non-SoFi fundings per month (more leads bought)</div></div>
+<div class="tile loss"><div class="n">&minus;12%</div><div class="l">Total SBG revenue per month, despite flat deal count</div></div>
+</div>
+<div class="tw"><table>
+<thead><tr><th>2026</th><th>SoFi</th><th>Non-SoFi</th></tr></thead>
+<tbody>
+<tr><td>Close on submissions</td><td class="num">23%</td><td class="num">13%</td></tr>
+<tr><td>Close on approvals</td><td class="num">31%</td><td class="num">24%</td></tr>
+<tr><td>Average funded deal</td><td class="num">$71K</td><td class="num">$45K</td></tr>
+<tr><td>SBG revenue per funded deal</td><td class="num">$5.4K</td><td class="num">$3.9K</td></tr>
+<tr><td>SBG revenue per opp created</td><td class="num">$1,291</td><td class="num">$290&ndash;$520</td></tr>
+</tbody></table></div>
+<p class="note">Buying more Lending Tree, businessloans.com and Bluevine leads kept the deal count flat in July&ndash;August. It cannot hold revenue, because those deals are $45K instead of $71K. So the plan targets two numbers: non-SoFi fundings, and revenue per non-SoFi deal.</p>
+</section>
+
+<section>
+<div class="eyebrow">Where the fundings come from</div>
+<h2>Five levers, ranked by what they can add each month</h2>
+<div class="callout"><b>Target:</b> +200 to +300 non-SoFi fundings per month by day 90. That covers SoFi at its July&ndash;August level and most of its first-half level. None of it needs a new lead vendor.</div>
+<div class="ledger">
+
+<div class="lever"><div class="body">
+<h3>Close the approvals you already have <span class="chip gain">Biggest lever</span></h3>
+<p>Non-SoFi close-on-approvals is 24% today and was 28% in 2024. Each point on ~2,200 non-SoFi approvals a month is 22 fundings. About 700 non-SoFi deals a month die after a $25K+ approval for reachable reasons; the median approval is $65K.</p>
+<ul>
+<li>24-hour rule: every pre-approval is presented to the merchant within one business day. Managers get an &ldquo;approved, not presented&rdquo; queue.</li>
+<li>Any approval untouched for 48 hours auto-reassigns to a senior closer.</li>
+<li>Seven-day expiring-approval text and email cadence. Lost-contact deals die at day 8 on average.</li>
+<li>Second-offer rule: no &ldquo;did not like the approval&rdquo; above $50K closes until it has been shopped to one more lender.</li>
+</ul>
+<div class="ev"><span>Did not like the offer, $25K+: <b>370/mo</b></span><span>Lost contact, $25K+: <b>160/mo</b></span><span>Holding off: <b>65/mo</b></span><span>Too expensive: <b>55/mo</b></span><span>Competitor: <b>40/mo</b></span></div>
+</div><div class="val"><div class="n">+80 to +130</div><div class="l">fundings / month at 28&ndash;30% close on approvals</div></div></div>
+
+<div class="lever"><div class="body">
+<h3>Re-work the $300K+ leads that were assigned and never finished <span class="chip gain">Already paid for</span></h3>
+<p>These are SoFi-sized businesses that asked for money this year. They were handed to a rep and stalled. Reps get ~230 leads a month and move on; nobody circles back.</p>
+<ul>
+<li><b>Never reached:</b> ~5,900 $300K+ leads a month end in &ldquo;Attempting to Contact.&rdquo; Put every ATC lead older than 7 days into an automated multi-channel cadence (text, email, auto-dial) that books the rep a callback. Aim to convert 5% into opps.</li>
+<li><b>Stalled on documents:</b> ~1,150 a month are Qualified and ~500 are Incomplete Package but never became an opp. Give them a doc-chase workflow with a bank-link option and a dedicated ops chaser instead of the rep. Aim to convert 15%.</li>
+</ul>
+<div class="ev"><span>ATC, $300K+, not converted: <b>47,322</b> (Jan&ndash;Aug)</span><span>Qualified, no opp: <b>9,193</b></span><span>Incomplete package: <b>4,004</b></span><span>2026 close on subs: <b>15%</b></span></div>
+</div><div class="val"><div class="n">+40 to +100</div><div class="l">fundings / month (295 + 250 extra opps at 15%)</div></div></div>
+
+<div class="lever"><div class="body">
+<h3>Turn lost approvals into a channel <span class="chip gain">1% today</span></h3>
+<p>Win-backs are 1% of fundings. January&ndash;August left about 5,700 non-SoFi deals with $25K+ approvals lost for reachable reasons, and 2025 left a similar pile. The Deal Lost distribution queue converted 31&ndash;40% of leads into opps in the years it was used, then went quiet.</p>
+<ul>
+<li>Automated 30, 60 and 90-day re-approach into the Deal Lost queue, starting with 2026 losses over $50K.</li>
+<li>Route re-engaged deals to a small closer pod, not back to the rep who lost them.</li>
+<li>Reasons to lead with: holding off on funds, too expensive, lost to competitor. Skip declined-starter and contract-issue losses.</li>
+</ul>
+<div class="ev"><span>Recontact pool: <b>~700/mo</b> new + backlog</span><span>Median approval: <b>$65K</b></span><span>5% recovery: <b>36/mo</b></span></div>
+</div><div class="val"><div class="n">+25 to +45</div><div class="l">fundings / month, higher during the backlog burst</div></div></div>
+
+<div class="lever"><div class="body">
+<h3>Ramp the new-hire teams, pause AE hiring <span class="chip hold">Capacity</span></h3>
+<p>Leads per rep fell to 196 in August and SoFi&rsquo;s decline pushes it lower; more reps now means thinner slices. The three new-hire teams (Kim, Kanner, Newberry) fund 7&ndash;8 deals per rep-month against 9&ndash;10 for the veteran teams, on about 19 reps.</p>
+<ul>
+<li>Freeze AE hiring until non-SoFi leads per rep are back above 230.</li>
+<li>Scripted offer presentation and a 30-day shadow-closer program for reps under 6 months; first-quarter reps close 14% of submissions vs 17% for veterans.</li>
+<li>Send the low-tier leads (sub-580 credit or under $200K revenue) to VSS and new hires. They are 44% of non-SoFi opps but 11.5% of non-SoFi revenue. Veterans get those hours back for approvals and Tiers 4&ndash;6.</li>
+</ul>
+<div class="ev"><span>Gap: <b>~2 fundings</b> per rep-month &times; 19 reps</span><span>Low-tier revenue per opp: <b>$138</b> vs <b>$840</b></span></div>
+</div><div class="val"><div class="n">+30 to +40</div><div class="l">fundings / month</div></div></div>
+
+<div class="lever hold"><div class="body">
+<h3>Route the SoFi-profile deals to the lenders that actually fund <span class="chip hold">Speed and margin</span></h3>
+<p>Each deal now goes to 12 lenders. On Deck funds 19% of deals from 5.5% of submissions, about 21 submissions per funding. Twelve lenders receive 35% of submissions and return 13% of fundings at 170 to 1,000 submissions each. Fewer, better-matched submissions mean faster offers and lenders who answer the phone.</p>
+<ul>
+<li>650+ credit and $700K+ revenue deals go first to On Deck, Fundation, Idea Financial and Peac, which fund 13&ndash;20% of what they pre-approve.</li>
+<li>Cap blanket submissions at 6 per deal; the rest by profile rule.</li>
+<li>Protect deal size: the $100&ndash;250K approval band closes 35% and pays the most; push term loan and line-of-credit products for prime-ish deals so revenue per deal does not drift from $4.6K toward $3.9K.</li>
+</ul>
+</div><div class="val"><div class="n">Faster offers</div><div class="l">supports lever 1; not counted twice</div></div></div>
+
+</div>
+</section>
+
+<section>
+<div class="eyebrow">Verify first</div>
+<h2>One pool that might be the biggest of all</h2>
+<div class="callout">About <b>1,900 SoFi leads</b> and <b>1,300 other $300K+ leads</b> a month were created in 2026 with a workable status and no Distribution Engine first-assignment stamp on the lead. Some are existing customers routed to Renewals and some are duplicates, and the stamp is missing on partner-queue leads, so this is <b>unverified</b>. A one-hour check: list 2026 leads with no distribution log at all, by source and status. If even a third are truly unworked, that is 1,000+ SoFi-sized businesses a month nobody called, and it becomes lever zero.</div>
+</section>
+
+<section>
+<div class="eyebrow">Sequence</div>
+<h2>The first 90 days</h2>
+<div class="steps">
+<div class="step"><div class="when">Days 1&ndash;14</div><ul>
+<li>Turn on the 24-hour presentation rule and the &ldquo;approved, not presented&rdquo; queue.</li>
+<li>Auto-reassign approvals untouched for 48 hours.</li>
+<li>Run the no-distribution-log lead check.</li>
+<li>Start the expiring-approval cadence on every open approval.</li>
+<li>Freeze AE hiring.</li>
+</ul></div>
+<div class="step"><div class="when">Days 15&ndash;45</div><ul>
+<li>Launch the ATC re-engagement cadence for $300K+ leads older than 7 days.</li>
+<li>Stand up the doc-chase workflow for Qualified and Incomplete Package leads.</li>
+<li>Deal Lost queue: automated 30/60/90 re-approach on 2026 losses over $50K.</li>
+<li>Route low-tier leads to VSS and new hires.</li>
+</ul></div>
+<div class="step"><div class="when">Days 46&ndash;90</div><ul>
+<li>Lender routing rules and a 6-submission cap.</li>
+<li>Second-offer rule on &ldquo;did not like&rdquo; above $50K.</li>
+<li>Shadow-closer program for the three new-hire teams.</li>
+<li>Work the 2025 lost-approval backlog.</li>
+<li>Read the results against the scoreboard below and cut what did not move.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<div class="eyebrow">Scoreboard</div>
+<h2>What to watch every week</h2>
+<div class="tw"><table>
+<thead><tr><th>Measure</th><th>Now</th><th>Day-90 target</th></tr></thead>
+<tbody>
+<tr><td>Non-SoFi fundings per month</td><td class="num">646</td><td class="num">800+</td></tr>
+<tr><td>Non-SoFi close on approvals</td><td class="num">24%</td><td class="num">28%</td></tr>
+<tr><td>Approvals presented within 24 hours</td><td class="num">not tracked</td><td class="num">95%</td></tr>
+<tr><td>Lost contact after a $25K+ approval, per month</td><td class="num">160</td><td class="num">under 80</td></tr>
+<tr><td>$300K+ leads still in ATC 7 days after assignment, per month</td><td class="num">~5,900</td><td class="num">under 4,000</td></tr>
+<tr><td>Qualified or Incomplete Package leads never converted, per month</td><td class="num">~1,650</td><td class="num">under 1,000</td></tr>
+<tr><td>Win-back share of fundings</td><td class="num">1.1%</td><td class="num">4%</td></tr>
+<tr><td>New-hire teams, fundings per rep-month</td><td class="num">7&ndash;8</td><td class="num">9</td></tr>
+<tr><td>Submissions per opp</td><td class="num">12</td><td class="num">8</td></tr>
+<tr><td>Revenue per non-SoFi funded deal</td><td class="num">$3.9K</td><td class="num">$4.2K</td></tr>
+</tbody></table></div>
+<p class="note">Seasonality will flatter Q4: September through December run 12&ndash;24% above an average month. Judge the plan on non-SoFi fundings against the same month last year, not on the total.</p>
+</section>
+</div>
