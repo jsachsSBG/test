@@ -11,6 +11,7 @@ app.listen(config.port, () => {
   ╠══════════════════════════════════════════════════╣
   ║   POST /track      — ingest visitor events       ║
   ║   POST /identify   — identify a visitor          ║
+  ║   POST /preapproval/sofi — SOFI lead preapproval ║
   ║   GET  /snippet.js — client tracking snippet     ║
   ║   GET  /health     — health check                ║
   ╚══════════════════════════════════════════════════╝

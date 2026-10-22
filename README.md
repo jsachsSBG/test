@@ -103,3 +103,33 @@ All config via environment variables — see `.env.example` for the full list.
 Key settings:
 - `HIGH_INTENT_SCORE_THRESHOLD` — score at which to fire alerts (default: 50)
 - `NOTIFY_COOLDOWN_MINUTES` — don't re-alert for same visitor within this window (default: 60)
+
+## SOFI Preapproval
+
+`POST /preapproval/sofi` scores an incoming SOFI lead from three inputs (annual revenue, average credit
+score, time in business). It returns approved/declined and a preapproval amount for two product groups:
+Term Loan + MCA, and Line of Credit + Revolving MCA.
+
+```json
+// request
+{ "annualRevenue": 1500000, "creditScore": 760, "timeInBusinessYears": 8 }
+// (or "businessStartDate": "2018-10-01" instead of timeInBusinessYears)
+
+// response
+{
+  "modelVersion": "sofi-preapproval-hetero-2026-10-cal2026-07..2026-10",
+  "coverageTarget": 0.85,
+  "inputs": { "annualRevenue": 1500000, "creditScore": 760, "timeInBusinessYears": 8 },
+  "termLoanMca": { "product": "term_mca", "decision": "approved", "amount": 50000, "typicalAmount": 135000, "approvalProbability": 0.868, "reasons": [] },
+  "lineOfCreditRmca": { "product": "loc_rmca", "decision": "approved", "amount": 46000, "typicalAmount": 100000, "approvalProbability": 0.667, "reasons": [] }
+}
+```
+
+- **`amount`:** a conservative preapproval. When a lender approves the deal, its largest approval meets
+  or beats this amount ~85% of the time.
+- **`typicalAmount`:** the median largest approval for similar deals. It is context, not a promise.
+- **`reasons`:** explains declines (knock-outs, or low approval likelihood with the weakest factor) and caps.
+- **Errors:** a lead without a numeric revenue or time in business returns HTTP 400.
+
+The model was trained on 24 months of SOFI New deals from Salesforce. Methodology, backtest results and
+the monthly retrain process are in [`training/sofi_preapproval/README.md`](training/sofi_preapproval/README.md).

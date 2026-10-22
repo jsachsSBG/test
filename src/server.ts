@@ -6,6 +6,7 @@ import { config } from "./config";
 import { processEvent, identifyVisitor, RawEvent } from "./tracking/tracker";
 import { enrichVisitor } from "./enrichment/enrich";
 import { evaluateAndNotify } from "./notifications/notifier";
+import { InvalidLeadError, preapprove } from "./preapproval";
 
 export function createServer(): express.Express {
   const app = express();
@@ -99,6 +100,30 @@ export function createServer(): express.Express {
       res.json({ ok: true });
     } catch (err) {
       console.error("[server] /identify error:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  /**
+   * POST /preapproval/sofi — preapproval for an incoming SOFI lead.
+   * Body: { annualRevenue, creditScore?, timeInBusinessYears? | businessStartDate? }
+   * Returns approved/declined plus a preapproval amount for Term Loan/MCA and for LOC/Revolving MCA.
+   */
+  app.post("/preapproval/sofi", (req, res) => {
+    try {
+      res.json(
+        preapprove({
+          annualRevenue: req.body.annualRevenue,
+          creditScore: req.body.creditScore,
+          timeInBusinessYears: req.body.timeInBusinessYears,
+          businessStartDate: req.body.businessStartDate,
+        }),
+      );
+    } catch (err) {
+      if (err instanceof InvalidLeadError) {
+        return res.status(400).json({ error: err.message });
+      }
+      console.error("[server] /preapproval/sofi error:", err);
       res.status(500).json({ error: "Internal server error" });
     }
   });
