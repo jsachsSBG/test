@@ -120,11 +120,11 @@ answers 503 while that variable is unset.
 
 // response
 {
-  "modelVersion": "sofi-preapproval-hetero-2026-10-49d04f13",
+  "modelVersion": "sofi-preapproval-hetero-2026-10-e34371c2",
   "coverageTarget": 0.85,
   "inputs": { "annualRevenue": 1500000, "creditScore": 760, "timeInBusinessYears": 8 },
   "termLoanMca": { "product": "term_mca", "decision": "approved", "amount": 50000, "typicalAmount": 130000, "approvalProbability": 0.865, "reasons": [] },
-  "lineOfCreditRmca": { "product": "loc_rmca", "decision": "approved", "amount": 45000, "typicalAmount": 95000, "approvalProbability": 0.694, "reasons": [] }
+  "lineOfCreditRmca": { "product": "loc_rmca", "decision": "approved", "amount": 45000, "typicalAmount": 95000, "approvalProbability": 0.706, "reasons": [] }
 }
 ```
 
@@ -134,8 +134,9 @@ answers 503 while that variable is unset.
 - **`reasons`:** explains declines and caps. Declines come from knock-outs (revenue under $100k, credit
   score missing or under 450, under 3 months in business) or from a low approval likelihood, in which
   case the weakest factor is named.
-- **Errors:** HTTP 400 when revenue or time in business is missing, non-numeric or implausible, a start
-  date is not a real past `YYYY-MM-DD` date, or the body is not valid JSON.
+- **Errors:** HTTP 400 when revenue or time in business is missing, non-numeric or implausible (revenue
+  over $1B, time in business over 100 years), a start date is not a real past `YYYY-MM-DD` date, or the
+  body is not valid JSON.
 
 The model was trained on 24 months of SOFI New deals from Salesforce. Methodology, backtest results
 (including how the model does on SOFI's new funnel) and the monthly retrain process are in

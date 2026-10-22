@@ -13,13 +13,16 @@ Smoothness: ridge penalty on second differences of the segment slopes (P-spline 
 
 For each product P in {tlmca, locr}:
   approval  logit p = a0 + sum_v f_v^a(x_v)           monotone logistic GAM (a_j >= 0), recency weighted,
-            intercept re-calibrated on the most recent `cal_months` of training data (mean p = observed rate).
+            intercept re-calibrated on the most recent `intercept_months` (per product) of training data
+            (mean p = observed rate).
   location  mu(x)    = m0 + sum_v f_v^m(x_v)          monotone (c_j >= 0), Huber-robust, recency + 1/sigma^2 weighted LS
   scale     sigma(x) = max(SIG_FLOOR, d0 + sum_v f_v^d(x_v))  additive model of the residual scale (E|r| or the
             downside semi-scale E[max(-r,0)]); its segment rises are box-bounded so that every quantile below is
             monotone:  c^m_j + c_q * c^d_j >= 0 for all c_q in [C_LO, C_HI].
   amounts   amt_q(x) = exp(mu(x) + c_q * sigma(x)),   c_q = EMPIRICAL quantile of z = (y - mu)/sigma on the most recent
             `cal_months` of training data (split-conformal; q10 -> 10th pct, q15 -> 15th, q20 -> 20th, point -> median).
+Both calibration windows widen month by month until they hold `min_cal_approvals` approvals; fit() raises if
+even the full history has fewer.
 """
 import numpy as np
 import pandas as pd
@@ -39,9 +42,9 @@ DEFAULT = dict(
     half_life_months=9.0,     # recency weight half-life (months before the last month of the fitting data); None = flat
     cal_months=4,             # most recent months of the fitting data used for the conformal c_q
     # most recent months used to recalibrate the approval intercept (mean p = observed rate). LOC appetite moves
-    # month to month, and on train-period months a 1-month window cut its mean |p - actual| from 4.3 to 2.8 points;
-    # Term Loan/MCA was indifferent to the window length.
-    intercept_months={'tlmca': 4, 'locr': 1},
+    # month to month: on train-period months mean |p - actual| was 4.3 pts (4 months), 3.7 (2) and 2.8 (1), but on
+    # Jul-Oct 2026 the 1-month window was worse (5.4 vs 4.5), so 2 months hedges. Term Loan/MCA was indifferent.
+    intercept_months={'tlmca': 4, 'locr': 2},
     min_cal_approvals=200,    # widen a calibration window month by month until it holds this many approvals
     conf_mode='insample',     # 'insample' : fit mu/sigma on all data, c_q from residuals on the window
                               # 'holdout'  : fit mu/sigma excluding the window, c_q on window, keep that (stale) fit
@@ -261,14 +264,18 @@ def _ls_eval(ls, B, floor):
 
 
 # ---------------------------------------------------------------------------------------------- fit / predict
-def _window(mi, months, need):
-    """Mask of the latest `months` months, widened month by month until `need` rows qualify."""
+def _window(mi, months, need, label):
+    """Mask of the latest `months` months, widened month by month until `need(mask)` holds."""
     last, first = mi.max(), mi.min()
     k = months
     while True:
         w = mi > last - k
-        if need(w) or last - k < first:
+        if need(w):
+            if k > months:
+                print(f'warning: {label} window widened from {months} to {k} months to reach the minimum approvals')
             return w
+        if last - k < first:
+            raise ValueError(f'{label}: too few approvals even over the full history')
         k += 1
 
 
@@ -291,11 +298,9 @@ def fit(train_df, cfg=None):
         amt = df[f'y_{P}_amt'].values
         ok = (y_ap == 1) & np.isfinite(amt)   # implausible offer amounts carry NaN and are left out
         min_n = cfg['min_cal_approvals']
-        in_win = _window(mi, cfg['cal_months'], lambda w: (ok & w).sum() >= min_n)
+        in_win = _window(mi, cfg['cal_months'], lambda w: (ok & w).sum() >= min_n, f'{P} quantile')
         k_int = cfg['intercept_months'][P] if isinstance(cfg['intercept_months'], dict) else cfg['intercept_months']
-        in_int = _window(mi, k_int, lambda w: (y_ap[w] == 1).sum() >= min_n)
-        if (ok & in_win).sum() < 50:
-            raise ValueError(f'{P}: only {(ok & in_win).sum()} approved deals with amounts to calibrate on')
+        in_int = _window(mi, k_int, lambda w: (y_ap[w] == 1).sum() >= min_n, f'{P} intercept')
         # ---------------- approval (logistic GAM, monotone)
         a0, ca = _fit_logit(B_all, y_ap, w_all, D, cfg['lam_logit'], cfg['ridge_logit'])
         if cfg['p_recal'] == 'intercept':

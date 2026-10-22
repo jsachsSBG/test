@@ -30,24 +30,30 @@ The model was fit on deals created 2024-10..2026-06, and the full policy was app
 | | Term Loan + MCA | LOC + Revolving MCA |
 |---|---|---|
 | Lender approval rate (actual) | 77.9% | 41.1% |
-| We approve | 89.3% | 42.7% |
-| Precision: of leads we approve, a lender approved | 81.4% | 58.9% |
-| Recall: of lender-approved deals, we approved | 93.3% | 61.2% |
-| Coverage: lender's largest offer ≥ our amount, where both approved | 83.9% (monthly 81.3–86.0%) | 86.5% (monthly 79.5–90.9%) |
-| Median of our amount ÷ actual largest offer | 0.43 | 0.42 |
-| Of leads we approve, a lender offered ≥ our amount | 68.3% | 50.9% |
+| We approve | 89.3% | 42.4% |
+| Precision: of leads we approve, a lender approved | 81.4% | 59.0% |
+| Recall: of lender-approved deals, we approved | 93.3% | 60.8% |
+| Coverage: lender's largest offer ≥ our amount, where both approved | 83.9% (monthly 81.3–86.0%) | 86.6% (monthly 79.5–90.8%) |
+| Median of our amount ÷ actual largest offer | 0.43 | 0.41 |
+| Of leads we approve, a lender offered ≥ our amount | 68.3% | 51.0% |
 | Approval AUC | 0.65 | 0.73 |
 
-**All leads** (n = 2,915), including the 10% that SBG's own pre-screen declined before any lender saw
-them (mostly volume too low, personal bank account, or poor cash flow). These count as declines.
-The endpoint scores leads before that pre-screen, so these are the lead-level figures:
+**All SOFI opportunities** (n = 2,915), including the 10% that SBG's own pre-screen declined before any
+lender saw them (mostly volume too low, personal bank account, or poor cash flow). These count as
+declines.
 
 | | Term Loan + MCA | LOC + Revolving MCA |
 |---|---|---|
 | Got an offer (actual) | 70.0% | 36.9% |
-| We approve | 84.6% | 39.5% |
-| Precision | 77.2% | 57.3% |
-| Of leads we approve, a lender offered ≥ our amount | 64.7% | 49.5% |
+| We approve | 84.6% | 39.2% |
+| Precision | 77.2% | 57.4% |
+| Of leads we approve, a lender offered ≥ our amount | 64.7% | 49.6% |
+
+None of these tables covers SOFI leads that never became an opportunity. That is about three in four SOFI
+leads (Jul–Oct 2026: 2,589 converted, 8,115 not; the unconverted are mostly DNQ, New or ATC). No lender
+saw them, so there is no outcome to score the model against. On a sample of unconverted leads, the model
+preapproved about half for Term Loan/MCA. Precision on the full incoming SOFI lead stream is therefore
+unknown, and likely lower than the opportunity-level figures.
 
 **SOFI new funnel, scored on the revenue SOFI actually sends** (n = 79, matured new-funnel deals since
 2026-10-13). The new funnel is about half of current SOFI traffic. Its stated revenue is a median 0.67× the
@@ -56,8 +62,8 @@ lead revenue the model trains on.
 | | Term Loan + MCA | LOC + Revolving MCA |
 |---|---|---|
 | Lender approval rate (actual) | 77.2% | 38.0% |
-| We approve | 72.2% | 16.5% |
-| Precision | 77.2% | 53.8% |
+| We approve | 72.2% | 15.2% |
+| Precision | 77.2% | 58.3% |
 | Recall | 72.1% | 23.3% |
 | Approval AUC | 0.52 (95% CI ~0.34–0.69) | 0.76 |
 | Coverage | 88.6% | 85.7% |
@@ -79,12 +85,15 @@ probability and every amount are non-decreasing in revenue, score and TIB.
 - **Amount:** `amount_q = exp(mu(x) + c_q · sigma(x))`.
 - **Recency:** samples are weighted by recency (9-month half-life).
 - **Intercept recalibration:** the approval intercept is recalibrated on the latest 4 months for Term
-  Loan/MCA and the latest 1 month for LOC/RMCA. LOC appetite moves month to month: on train-period months,
-  the 1-month window cut mean |p − actual| from 4.3 to 2.8 points.
+  Loan/MCA and the latest 2 months for LOC/RMCA. LOC appetite moves month to month.
+  - On train-period months (Nov 2025–Jun 2026), mean |p − actual| was 4.3 points with 4 months,
+    3.7 with 2 and 2.8 with 1.
+  - On Jul–Oct 2026 the 1-month window did worse than 4 months (5.4 vs 4.5), so the shorter windows'
+    edge is not stable. 2 months is the hedge.
 - **Amount quantiles:** the `c_q` are empirical standardized-residual quantiles on the latest 4 months
   (split-conformal).
-- **Small windows:** a window widens month by month until it holds at least 200 approvals, and the fit
-  stops with an error if it cannot.
+- **Small windows:** a window widens month by month until it holds at least 200 approvals, with a
+  printed warning. The fit stops with an error if even the full history has fewer.
 
 `policy.py` — the decision layer, scored only from the exported JSON. `src/preapproval/index.ts` is a
 line-for-line port, and jest replays the vectors `policy.py` generates. The two implementations agree to
@@ -111,9 +120,9 @@ input sitting exactly on a threshold.
 
 | Threshold | Approve | Precision |
 |---|---|---|
-| 0.5 | 42.7% | 58.9% |
-| 0.6 | 23.2% | 63.6% |
-| 0.7 | 7.8% | 70.7% |
+| 0.5 | 42.4% | 59.0% |
+| 0.6 | 22.7% | 63.8% |
+| 0.7 | 7.5% | 71.4% |
 
 ## Data (Salesforce)
 
@@ -212,7 +221,7 @@ and score.
 **LOC label regime.** From Sep 2026, Byzfunder's API attaches a "ByzFlex" Revolving MCA offer next to
 most of its MCA offers. LOC/RMCA approval rose from about 35% (Jul) to about 45% (Sep–Oct), driven by
 these offers. LOC-only approval stayed at 34–39%. They are real, fundable offers, so they count, and
-LOC/RMCA calibration uses the latest month.
+the LOC/RMCA intercept is calibrated on the latest two months.
 
 **Lender appetite.** Term Loan/MCA approval fell from about 83% (H1 2026) to about 78% (Jul–Oct 2026). Recalibrate
 monthly.

@@ -6,7 +6,7 @@
 
 1. Backtest: fit on the train split (submitted deals created before --test-start), apply the full decision
    policy to the out-of-time test split and report decision + amount metrics (nothing is tuned on test).
-   Also reported: lead-level metrics that count SBG pre-screen declines (never submitted) as declines,
+   Also reported: all SOFI opportunities, counting SBG pre-screen declines (never submitted) as declines,
    and SOFI new-funnel deals scored on the revenue SOFI actually sends.
 2. Production fit: refit on ALL mature submitted deals; the approval intercept and the amount quantiles
    are recalibrated on the latest months, so the model tracks current lender appetite.
@@ -151,7 +151,7 @@ def main():
     E_bt = export_json(m_bt, tr, PL.POLICY)
     rep_raw = harness.evaluate(M.predict(m_bt, te), te, "backtest/raw-model")
     bt, _ = backtest(E_bt, te, PL.POLICY)
-    bt_lead, _ = backtest(E_bt, harness.lead_level_test(d), PL.POLICY)
+    bt_lead, _ = backtest(E_bt, harness.all_opportunities_test(d), PL.POLICY)
     nf = harness.new_funnel_view(te)
     if nf.empty:
         print("warning: no SOFI new-funnel deals in the test split; new-funnel backtest skipped")
@@ -184,7 +184,7 @@ def main():
         json.dump(bt_report, f, indent=1, default=float)
     rate_card(E, PL.POLICY).to_csv(os.path.join(report_dir, "rate_card.csv"), index=False)
 
-    for label, res in [("submitted deals", bt), ("all leads (pre-screen declines count as declines)", bt_lead),
+    for label, res in [("submitted deals", bt), ("all SOFI opportunities (pre-screen declines count as declines)", bt_lead),
                        ("new funnel, SOFI revenue", bt_nf)]:
         if res is None:
             continue

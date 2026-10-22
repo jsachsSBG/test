@@ -138,10 +138,11 @@ export function createServer(): express.Express {
     res.send(getSnippetJs());
   });
 
-  // Malformed JSON bodies get a JSON error instead of express's HTML stack trace
-  app.use((err: { type?: string }, _req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if (err?.type === "entity.parse.failed") {
-      return res.status(400).json({ error: "Request body must be a valid JSON object" });
+  // Request-body errors (malformed JSON, too large, bad encoding) get a JSON error instead of an HTML stack trace
+  app.use((err: { type?: string; status?: number; expose?: boolean; message?: string }, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err?.type && typeof err.status === "number" && err.status >= 400 && err.status < 500) {
+      const message = err.type === "entity.parse.failed" ? "Request body must be a valid JSON object" : err.expose ? err.message : "Bad request";
+      return res.status(err.status).json({ error: message });
     }
     next(err);
   });
@@ -150,7 +151,7 @@ export function createServer(): express.Express {
 }
 
 function requirePreapprovalKey(req: express.Request, res: express.Response, next: express.NextFunction): void {
-  const expected = config.preapprovalApiKey;
+  const expected = config.preapprovalApiKey.trim();
   if (!expected) {
     res.status(503).json({ error: "Preapproval is not configured (PREAPPROVAL_API_KEY is unset)" });
     return;

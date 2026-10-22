@@ -244,7 +244,7 @@
   },
   "locr": {
    "logit": {
-    "intercept": -6.221934149159561,
+    "intercept": -6.168393204768211,
     "rev": [
      0.6677859442237024,
      0.47644100400166745,
@@ -434,20 +434,20 @@
    },
    "locr": {
     "intercept": [
-     "2026-10",
+     "2026-09",
      "2026-10"
     ],
     "quantiles": [
      "2026-07",
      "2026-10"
     ],
-    "n_intercept": 490,
+    "n_intercept": 1232,
     "n_quantile_approvals": 1077
    }
   },
   "approval_rate_in_intercept_window": {
    "tlmca": 0.7789232531500573,
-   "locr": 0.45102040816326533
+   "locr": 0.4512987012987013
   },
   "config": {
    "rev_clip": [
@@ -501,7 +501,7 @@
    "cal_months": 4,
    "intercept_months": {
     "tlmca": 4,
-    "locr": 1
+    "locr": 2
    },
    "min_cal_approvals": 200,
    "conf_mode": "insample",
@@ -527,5 +527,5 @@
   }
  },
  "trained_on": "2026-10-22",
- "model_version": "sofi-preapproval-hetero-2026-10-49d04f13"
+ "model_version": "sofi-preapproval-hetero-2026-10-e34371c2"
 }

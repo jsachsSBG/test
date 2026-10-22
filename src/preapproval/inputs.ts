@@ -14,6 +14,8 @@ export const MIN_CREDIT_SCORE = 300;
 export const MAX_CREDIT_SCORE = 850;
 /** Larger stated revenues are treated as entry errors rather than scored as top-band businesses */
 export const MAX_ANNUAL_REVENUE = 1_000_000_000;
+/** Longer times in business are entry errors (a founding year or a month count in the years field) */
+export const MAX_TIB_YEARS = 100;
 const NUMERIC = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/;
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -63,7 +65,6 @@ export function normalizeInputs(input: SofiLeadInput, now: Date = new Date()): N
   if (tib === null && input.businessStartDate != null && input.businessStartDate !== "") {
     const start = parseIsoDate(input.businessStartDate);
     if (!start) throw new InvalidLeadError("businessStartDate must be a valid YYYY-MM-DD date");
-    if (start.getUTCFullYear() < 1900) throw new InvalidLeadError("businessStartDate is before 1900");
     tib = (now.getTime() - start.getTime()) / MS_PER_YEAR;
     if (tib < 0) throw new InvalidLeadError("businessStartDate is in the future");
   }
@@ -71,6 +72,7 @@ export function normalizeInputs(input: SofiLeadInput, now: Date = new Date()): N
     throw new InvalidLeadError("timeInBusinessYears or businessStartDate is required");
   }
   if (tib < 0) throw new InvalidLeadError("timeInBusinessYears must not be negative");
+  if (tib > MAX_TIB_YEARS) throw new InvalidLeadError(`time in business over ${MAX_TIB_YEARS} years looks like an entry error`);
 
   return { annualRevenue, creditScore, timeInBusinessYears: tib };
 }

@@ -51,8 +51,8 @@ def split(d):
     return d[d.split == 'train'].copy(), d[d.split == 'test'].copy()
 
 
-def lead_level_test(d):
-    """All mature test-period deals, including SBG pre-screen declines that never reached a lender."""
+def all_opportunities_test(d):
+    """All mature test-period SOFI opportunities, including SBG pre-screen declines that never reached a lender."""
     return d[d.split == 'test'].copy()
 
 
@@ -130,7 +130,8 @@ def evaluate(pred, df, label=''):
                 'segments': seg,
             }
         # joint: of leads we tell "approved", share where a lender approved >= our q15 amount
-        k = a == 1
+        # approved deals whose amount was excluded as an entry error are left out, as in train.backtest
+        k = (a == 1) & ~((y == 1) & df[f'y_{P}_amt'].isna().values)
         if k.sum():
             q15 = pred.loc[k, f'amt_{P}_q15'].values
             actual_all = df.loc[k, f'y_{P}_amt'].fillna(0).values

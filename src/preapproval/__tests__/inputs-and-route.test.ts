@@ -41,6 +41,13 @@ describe("input parsing", () => {
     expect(() => normalizeInputs({ annualRevenue: 1_500_000, creditScore: 760, businessStartDate: "1899-12-31" }, now)).toThrow(InvalidLeadError);
   });
 
+  it("rejects time in business over 100 years (a founding year or month count in the years field)", () => {
+    for (const timeInBusinessYears of [2015, "2015", 101, 1e300]) {
+      expect(() => normalizeInputs({ annualRevenue: 1_500_000, creditScore: 760, timeInBusinessYears }, now)).toThrow(InvalidLeadError);
+    }
+    expect(normalizeInputs({ annualRevenue: 1_500_000, creditScore: 760, timeInBusinessYears: 100 }, now).timeInBusinessYears).toBe(100);
+  });
+
   it("treats credit scores outside 300-850 as missing", () => {
     expect(normalizeInputs({ annualRevenue: 9e5, creditScore: 851, timeInBusinessYears: 4 }, now).creditScore).toBeNull();
     expect(normalizeInputs({ annualRevenue: 9e5, creditScore: "850", timeInBusinessYears: 4 }, now).creditScore).toBe(850);
@@ -83,8 +90,15 @@ describe("POST /preapproval/sofi", () => {
   const lead = JSON.stringify({ annualRevenue: 1_500_000, creditScore: 760, timeInBusinessYears: 8 });
 
   it("is disabled until an API key is configured", async () => {
-    config.preapprovalApiKey = "";
-    expect((await post(lead, "anything")).status).toBe(503);
+    for (const key of ["", "   "]) {
+      config.preapprovalApiKey = key;
+      expect((await post(lead, "anything")).status).toBe(503);
+    }
+  });
+
+  it("ignores whitespace around the configured key", async () => {
+    config.preapprovalApiKey = "  test-key\n";
+    expect((await post(lead, "test-key")).status).toBe(200);
   });
 
   it("requires the API key", async () => {
@@ -100,11 +114,15 @@ describe("POST /preapproval/sofi", () => {
 
   it("answers malformed and incomplete bodies with JSON 400s", async () => {
     config.preapprovalApiKey = "test-key";
-    for (const body of ["{bad json", "5", "null", JSON.stringify({ annualRevenue: null, creditScore: 760, timeInBusinessYears: 8 })]) {
+    for (const body of ["{bad json", "5", "null", JSON.stringify({ annualRevenue: null, creditScore: 760, timeInBusinessYears: 8 }),
+      JSON.stringify({ annualRevenue: 1_500_000, creditScore: 760, timeInBusinessYears: 2015 })]) {
       const res = await post(body, "test-key");
       expect(res.status).toBe(400);
       expect(res.headers.get("content-type")).toMatch(/application\/json/);
       expect(((await res.json()) as { error: string }).error).toBeTruthy();
     }
+    const big = await post(JSON.stringify({ pad: "x".repeat(200_000) }), "test-key");
+    expect(big.status).toBe(413);
+    expect(big.headers.get("content-type")).toMatch(/application\/json/);
   });
 });
