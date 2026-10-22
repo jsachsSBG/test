@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -106,10 +107,11 @@ export function createServer(): express.Express {
 
   /**
    * POST /preapproval/sofi — preapproval for an incoming SOFI lead.
+   * Header: x-api-key (PREAPPROVAL_API_KEY). Server-to-server only: the key must never reach a browser.
    * Body: { annualRevenue, creditScore?, timeInBusinessYears? | businessStartDate? }
    * Returns approved/declined plus a preapproval amount for Term Loan/MCA and for LOC/Revolving MCA.
    */
-  app.post("/preapproval/sofi", (req, res) => {
+  app.post("/preapproval/sofi", requirePreapprovalKey, (req, res) => {
     try {
       res.json(
         preapprove({
@@ -136,7 +138,30 @@ export function createServer(): express.Express {
     res.send(getSnippetJs());
   });
 
+  // Malformed JSON bodies get a JSON error instead of express's HTML stack trace
+  app.use((err: { type?: string }, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err?.type === "entity.parse.failed") {
+      return res.status(400).json({ error: "Request body must be a valid JSON object" });
+    }
+    next(err);
+  });
+
   return app;
+}
+
+function requirePreapprovalKey(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  const expected = config.preapprovalApiKey;
+  if (!expected) {
+    res.status(503).json({ error: "Preapproval is not configured (PREAPPROVAL_API_KEY is unset)" });
+    return;
+  }
+  const given = Buffer.from(String(req.headers["x-api-key"] ?? ""));
+  const want = Buffer.from(expected);
+  if (given.length !== want.length || !timingSafeEqual(given, want)) {
+    res.status(401).json({ error: "Invalid or missing x-api-key" });
+    return;
+  }
+  next();
 }
 
 function getSnippetJs(): string {

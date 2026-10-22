@@ -45,7 +45,15 @@ def load(path):
 
 
 def split(d):
+    """Train/test rows among deals submitted to lenders (the population the model is fit on)."""
+    if 'submitted' in d:
+        d = d[d.submitted]
     return d[d.split == 'train'].copy(), d[d.split == 'test'].copy()
+
+
+def lead_level_test(d):
+    """All mature test-period deals, including SBG pre-screen declines that never reached a lender."""
+    return d[d.split == 'test'].copy()
 
 
 def new_funnel_view(d):
@@ -90,7 +98,7 @@ def evaluate(pred, df, label=''):
                           'precision': float(y[k].mean()) if k.sum() else float('nan')})
         r['threshold_curve'] = curve
 
-        ok = (y == 1)
+        ok = (y == 1) & df[f'y_{P}_amt'].notna().values  # implausible offer amounts are excluded
         act = df.loc[ok, f'y_{P}_amt'].values
         amt = {}
         pt = pred.loc[ok, f'amt_{P}_point'].values

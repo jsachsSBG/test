@@ -18,6 +18,9 @@ export const config = {
 
   clearbitApiKey: process.env.CLEARBIT_API_KEY || "",
 
+  /** Shared secret SOFI sends in the x-api-key header; POST /preapproval/sofi is disabled while empty */
+  preapprovalApiKey: process.env.PREAPPROVAL_API_KEY || "",
+
   highIntentScoreThreshold: parseInt(process.env.HIGH_INTENT_SCORE_THRESHOLD || "50", 10),
   notifyCooldownMinutes: parseInt(process.env.NOTIFY_COOLDOWN_MINUTES || "60", 10),
 };

@@ -37,7 +37,12 @@ DEFAULT = dict(
     tib_clip=(0.25, 40.),
     tib_knots=[0.5, 1., 1.5, 2., 3., 5., 8., 12., 20.],
     half_life_months=9.0,     # recency weight half-life (months before the last month of the fitting data); None = flat
-    cal_months=4,             # most recent months of the fitting data used for conformal c_q + p intercept
+    cal_months=4,             # most recent months of the fitting data used for the conformal c_q
+    # most recent months used to recalibrate the approval intercept (mean p = observed rate). LOC appetite moves
+    # month to month, and on train-period months a 1-month window cut its mean |p - actual| from 4.3 to 2.8 points;
+    # Term Loan/MCA was indifferent to the window length.
+    intercept_months={'tlmca': 4, 'locr': 1},
+    min_cal_approvals=200,    # widen a calibration window month by month until it holds this many approvals
     conf_mode='insample',     # 'insample' : fit mu/sigma on all data, c_q from residuals on the window
                               # 'holdout'  : fit mu/sigma excluding the window, c_q on window, keep that (stale) fit
                               # 'holdout_refit': c_q from holdout as above, then refit mu/sigma on all data
@@ -256,24 +261,46 @@ def _ls_eval(ls, B, floor):
 
 
 # ---------------------------------------------------------------------------------------------- fit / predict
+def _window(mi, months, need):
+    """Mask of the latest `months` months, widened month by month until `need` rows qualify."""
+    last, first = mi.max(), mi.min()
+    k = months
+    while True:
+        w = mi > last - k
+        if need(w) or last - k < first:
+            return w
+        k += 1
+
+
+def _span(ym, mask):
+    return (str(ym[mask].min()), str(ym[mask].max()))
+
+
 def fit(train_df, cfg=None):
     cfg = dict(DEFAULT, **(cfg or {}))
     basis = Basis(cfg)
     D = basis.penalty()
     df = train_df
+    ym = df['ym'].values
     mi = _month_index(df['ym'])
-    last = mi.max()
-    in_win = mi > last - cfg['cal_months']
     w_all = _recency_weights(df['ym'], cfg['half_life_months'])
     B_all = basis.matrix(df)
-    model = {'cfg': cfg, 'basis': basis, 'cal_window': (str(df['ym'][in_win].min()), str(df['ym'][in_win].max()))}
+    model = {'cfg': cfg, 'basis': basis, 'windows': {}}
     for P in PRODUCTS:
         y_ap = df[f'y_{P}_approved'].values.astype(float)
+        amt = df[f'y_{P}_amt'].values
+        ok = (y_ap == 1) & np.isfinite(amt)   # implausible offer amounts carry NaN and are left out
+        min_n = cfg['min_cal_approvals']
+        in_win = _window(mi, cfg['cal_months'], lambda w: (ok & w).sum() >= min_n)
+        k_int = cfg['intercept_months'][P] if isinstance(cfg['intercept_months'], dict) else cfg['intercept_months']
+        in_int = _window(mi, k_int, lambda w: (y_ap[w] == 1).sum() >= min_n)
+        if (ok & in_win).sum() < 50:
+            raise ValueError(f'{P}: only {(ok & in_win).sum()} approved deals with amounts to calibrate on')
         # ---------------- approval (logistic GAM, monotone)
         a0, ca = _fit_logit(B_all, y_ap, w_all, D, cfg['lam_logit'], cfg['ridge_logit'])
         if cfg['p_recal'] == 'intercept':
-            eta = a0 + B_all[in_win] @ ca
-            target = y_ap[in_win].mean()
+            eta = a0 + B_all[in_int] @ ca
+            target = y_ap[in_int].mean()
             lo, hi = -5., 5.
             for _ in range(80):
                 mid = 0.5 * (lo + hi)
@@ -281,13 +308,16 @@ def fit(train_df, cfg=None):
                     hi = mid
                 else:
                     lo = mid
-            a0 = a0 + 0.5 * (lo + hi)
+            shift = 0.5 * (lo + hi)
+            if abs(shift) > 4.99:
+                raise ValueError(f'{P}: approval intercept recalibration hit its bound ({shift:+.2f})')
+            a0 = a0 + shift
         model[P, 'logit'] = (a0, ca)
+        model['windows'][P] = {'intercept': _span(ym, in_int), 'quantiles': _span(ym, in_win),
+                               'n_intercept': int(in_int.sum()), 'n_quantile_approvals': int((ok & in_win).sum())}
 
         # ---------------- amounts
-        ok = y_ap == 1
-        amt = df[f'y_{P}_amt'].values
-        yl = np.log(np.clip(amt, 100., None))
+        yl = np.log(np.clip(np.nan_to_num(amt, nan=100.), 100., None))
         is_ph = np.isin(pd.to_numeric(df['rev'], errors='coerce').values, np.asarray(cfg['placeholder_revs'], float))
         w_amt = w_all * np.where(is_ph, cfg['placeholder_fit_weight'], 1.0)
         if cfg['conf_mode'] in ('holdout', 'holdout_refit'):

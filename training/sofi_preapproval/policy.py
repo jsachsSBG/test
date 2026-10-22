@@ -1,6 +1,8 @@
 """Reference implementation of the SOFI preapproval decision, scored ONLY from the exported model JSON.
 
-src/preapproval/*.ts must reproduce `preapprove()` exactly; train.py embeds its outputs as test vectors.
+src/preapproval/*.ts must reproduce `preapprove()` to floating-point precision (V8 and libm exp/log can differ in the
+last ulp, which only matters for inputs sitting exactly on a threshold or rounding boundary); train.py writes its
+outputs as parity test vectors.
 """
 import math
 

@@ -5,7 +5,7 @@
  * for Term Loan/MCA and for LOC/Revolving MCA, an approved/declined decision and a preapproval amount.
  * The amount is calibrated so that, when a lender approves the deal, its largest approval is at or above
  * the preapproval amount ~85% of the time (policy.coverage_target). Mirrors
- * training/sofi_preapproval/policy.py (preapprove); parity is enforced by unit tests.
+ * training/sofi_preapproval/policy.py (preapprove) to floating-point precision; parity is enforced by unit tests.
  */
 import { normalizeInputs } from "./inputs";
 import { features, MODEL, ModelExport, ModelProduct, Policy, RoundingTier, scoreRaw, terms } from "./model";
@@ -121,14 +121,15 @@ function toProduct(product: ProductPreapproval["product"], d: ProductDecision): 
     decision: d.decision,
     amount: d.amount,
     typicalAmount: d.typicalAmount,
-    approvalProbability: Math.round(d.p * 1000) / 1000,
+    // floored so a probability just under the approval threshold never displays as reaching it
+    approvalProbability: Math.floor(d.p * 1000) / 1000,
     reasons: d.reasons,
   };
 }
 
 /**
  * Preapprove a SOFI lead.
- * Throws InvalidLeadError when revenue or time in business is missing or not a number.
+ * Throws InvalidLeadError when revenue or time in business is missing, malformed or implausible.
  */
 export function preapprove(input: SofiLeadInput, now: Date = new Date()): PreapprovalResult {
   const x = normalizeInputs(input, now);

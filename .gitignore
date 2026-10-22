@@ -3,3 +3,5 @@ dist/
 .env
 *.db
 __pycache__/
+training/sofi_preapproval/data/
+*.pkl

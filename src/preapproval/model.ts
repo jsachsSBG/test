@@ -4,7 +4,7 @@
  * Heteroscedastic log-normal amount model + monotone logistic approval model, one per product group.
  * Every input enters through a piecewise-linear "segment" basis with non-negative rises, so the approval
  * probability and every amount are non-decreasing in revenue, credit score and time in business.
- * Mirrors training/sofi_preapproval/policy.py (score_raw); parity is enforced by unit tests.
+ * Mirrors training/sofi_preapproval/policy.py (score_raw) to floating-point precision; parity is enforced by unit tests.
  */
 import modelJson from "./model.json";
 

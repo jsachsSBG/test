@@ -8,14 +8,15 @@
 
 export type ProductGroup = "term_mca" | "loc_rmca";
 
+/** Numbers may arrive as JSON numbers or plain numeric strings ("1500000"); anything else counts as missing. */
 export interface SofiLeadInput {
-  /** Annual revenue in dollars as stated on the SOFI lead */
-  annualRevenue: number;
-  /** Average owner credit score (300-850); null/undefined when SOFI has not sent one */
-  creditScore?: number | null;
-  /** Time in business in years (e.g. 2.5). Alternatively pass businessStartDate. */
-  timeInBusinessYears?: number | null;
-  /** ISO date (YYYY-MM-DD) the business started; used when timeInBusinessYears is absent */
+  /** Annual revenue in dollars as stated on the SOFI lead (0 to $1B) */
+  annualRevenue: number | string;
+  /** Average owner credit score (300-850); missing or out of range declines both products */
+  creditScore?: number | string | null;
+  /** Time in business in years (e.g. 2.5, not negative). Alternatively pass businessStartDate. */
+  timeInBusinessYears?: number | string | null;
+  /** Date the business started, strictly YYYY-MM-DD and not in the future; used when timeInBusinessYears is absent */
   businessStartDate?: string | null;
 }
 
